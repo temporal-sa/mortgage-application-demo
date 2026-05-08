@@ -6,12 +6,14 @@ import {
   HttpStatus,
   Param,
   Post,
+  Query,
 } from '@nestjs/common';
 import {
   ApiBody,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -67,9 +69,19 @@ export class MortgageController {
     type: String,
     example: MORTGAGE_EXAMPLE_APPLICATION_ID,
   })
+  @ApiQuery({
+    name: 'runId',
+    required: false,
+    type: String,
+    description:
+      'Specific Temporal run to address. Use when the same applicationId has been reset or re-run, so the same workflowId now spans multiple executions.',
+  })
   @ApiResponse({ status: 200, description: 'Current application state' })
-  getApplication(@Param('applicationId') applicationId: string) {
-    return this.mortgageService.getApplication(applicationId);
+  getApplication(
+    @Param('applicationId') applicationId: string,
+    @Query('runId') runId?: string,
+  ) {
+    return this.mortgageService.getApplication(applicationId, runId);
   }
 
   @Post(':applicationId/actions')

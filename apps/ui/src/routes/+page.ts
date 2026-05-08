@@ -9,9 +9,12 @@ export const load: PageLoad = async ({ fetch, url }) => {
   ]);
 
   const applicationId = url.searchParams.get('applicationId') ?? '';
+  const runId = url.searchParams.get('runId') ?? '';
   const app = applicationId
-    ? await getApplication(applicationId, fetch).catch(() => null)
+    ? await getApplication(applicationId, runId || undefined, fetch).catch(
+        () => null,
+      )
     : null;
 
-  return { scenarios, applications, app, applicationId };
+  return { scenarios, applications, app, applicationId, runId };
 };

@@ -59,6 +59,9 @@ export interface MortgageApplication {
   workflowStatus?: ApplicationWorkflowStatus;
   workflowVersion?: WorkflowVersion;
   workerBuildId?: string;
+  // Temporal run ID that produced this state. Together with applicationId
+  // it uniquely identifies a single workflow execution.
+  runId?: string;
 }
 
 export interface ScenarioOption {
@@ -73,4 +76,17 @@ export interface ApplicationListItem {
   workflowStatus: ApplicationWorkflowStatus;
   workflowVersion?: WorkflowVersion;
   workerBuildId?: string;
+  // Temporal run ID for this execution. The same applicationId can appear
+  // across multiple runs (e.g. after a reset/re-run from the Temporal UI),
+  // so list items are keyed by (applicationId, runId).
+  runId?: string;
+}
+
+// Stable execution-level identity for a list item. Built from the
+// (applicationId, runId) pair so multiple executions sharing the same
+// applicationId can be addressed and rendered distinctly.
+export function applicationExecutionKey(
+  item: Pick<ApplicationListItem, 'applicationId' | 'runId'>,
+): string {
+  return `${item.applicationId}:${item.runId ?? ''}`;
 }

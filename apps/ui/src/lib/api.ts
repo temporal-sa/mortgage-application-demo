@@ -74,10 +74,12 @@ export async function startApplication(
 
 export async function getApplication(
   applicationId: string,
+  runId?: string,
   fetchFn?: typeof fetch,
 ): Promise<MortgageApplication> {
+  const query = runId ? `?runId=${encodeURIComponent(runId)}` : '';
   return request<MortgageApplication>(
-    `/v1/applications/${encodeURIComponent(applicationId)}`,
+    `/v1/applications/${encodeURIComponent(applicationId)}${query}`,
     undefined,
     fetchFn,
   );

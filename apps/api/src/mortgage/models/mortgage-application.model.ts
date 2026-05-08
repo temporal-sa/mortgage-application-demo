@@ -37,4 +37,9 @@ export interface MortgageApplication {
   // operator-level visibility in the UI summary; may be absent for
   // workflows that ran on an unversioned worker.
   workerBuildId?: string;
+  // Temporal run ID for this workflow execution. Together with applicationId
+  // it uniquely identifies a single execution; the same applicationId can
+  // appear across multiple runs (e.g. after a reset/re-run from the
+  // Temporal UI).
+  runId?: string;
 }
