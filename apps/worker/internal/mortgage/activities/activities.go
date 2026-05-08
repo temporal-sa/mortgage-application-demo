@@ -266,6 +266,22 @@ func (a *Activities) SendNotification(ctx context.Context, input SendNotificatio
 		WithLabelValues(input.Scenario, a.workerVersionLabel(), input.Status).
 		Inc()
 
+	// Business metric: end-to-end application duration. Observed at the same
+	// terminal point as the completion counter, so it fires exactly once per
+	// successfully notified workflow execution. Activity bodies do not run
+	// during workflow replay, and earlier failed attempts return before
+	// reaching this point, so no duplicate observations are produced. Skipped
+	// when SubmittedAt is unset (e.g. legacy callers in tests) or when the
+	// computed duration is non-positive, so the histogram never records a
+	// degenerate sample.
+	if !input.SubmittedAt.IsZero() {
+		if duration := time.Since(input.SubmittedAt); duration > 0 {
+			observability.ApplicationDurationSeconds.
+				WithLabelValues(input.Scenario, a.workerVersionLabel(), input.Status).
+				Observe(duration.Seconds())
+		}
+	}
+
 	return SendNotificationResult{
 		ApplicationID: input.ApplicationID,
 		Status:        input.Status,

@@ -15,9 +15,11 @@ handling and safe workflow evolution.
   * [Running the demo](#running-the-demo)
   * [Suggested demo flow](#suggested-demo-flow)
   * [Observability and metrics](#observability-and-metrics)
+    * [Grafana provisioning](#grafana-provisioning)
     * [Custom metric labels](#custom-metric-labels)
     * [Useful Prometheus queries](#useful-prometheus-queries)
-    * [Suggested metrics demo flow](#suggested-metrics-demo-flow)
+    * [Suggested Grafana demo flow](#suggested-grafana-demo-flow)
+    * [Suggested Prometheus demo flow](#suggested-prometheus-demo-flow)
 
 <!-- Regenerate with "pre-commit run -a markdown-toc" -->
 
@@ -263,14 +265,27 @@ The worker exposes a Prometheus metrics endpoint that covers both the
 standard Temporal SDK metrics and the custom mortgage business metrics
 emitted from activities. Prometheus scrapes the worker metrics endpoint
 over the internal Docker network and treats the v1 and v2 workers as
-separate scrape targets.
+separate scrape targets. Grafana runs as part of the same Docker Compose
+stack, provisioned to read from Prometheus and pre-loaded with both the
+Temporal SDK dashboard and a custom mortgage dashboard.
 
-Prometheus is available at <http://localhost:9090>. The query UI can be
-accessed directly at <http://localhost:9090/graph>.
+Grafana is the primary visual surface for the demo:
 
-When v2 is not deployed, its Prometheus target will appear as down.
-This is expected. When `make deploy-v2` is run, the v2 target becomes
-available automatically.
+* Grafana: <http://localhost:3001>
+* Credentials: `admin` / `admin`. Anonymous viewer access is also enabled,
+  so the dashboards open without signing in.
+
+Prometheus is still exposed for ad hoc queries:
+
+* Prometheus: <http://localhost:9090>
+* Query UI: <http://localhost:9090/graph>
+
+Both come up automatically with `make deploy`. There is no separate
+Grafana command and no dashboard update workflow.
+
+When v2 is not deployed, its Prometheus target will appear as down. This
+is expected. When `make deploy-v2` is run, the v2 target becomes available
+automatically.
 
 This is intentionally lightweight. Application logs remain plain
 structured logs and metrics are scoped to the demo. All logs include
@@ -279,6 +294,27 @@ Temporal. A production platform would normally ship logs and metrics
 to existing tooling such as Prometheus, Grafana, Datadog, Splunk or
 ELK. The demo proves the metrics integration path rather than building
 a full observability platform.
+
+#### Grafana provisioning
+
+Grafana is provisioned automatically from files under `dev/grafana/`,
+which is local demo tooling rather than deployment configuration. There
+is no manual import or data source setup.
+
+* The Prometheus data source is provisioned as `Prometheus` and marked as
+  default.
+* Two dashboard folders are loaded on startup:
+  * **Mortgage Demo** contains the custom `Mortgage Application Demo`
+    dashboard with the business metrics described below.
+  * **Temporal** contains the standard Temporal SDK dashboard vendored
+    from
+    [temporalio/dashboards](https://github.com/temporalio/dashboards).
+    The JSON is checked in directly and intentionally kept static for
+    demo repeatability. Its data source variable is normalised so it
+    resolves to the provisioned Prometheus on first open.
+
+A fresh clone works immediately. No JSON is fetched at runtime and no
+extra setup command is required.
 
 #### Custom metric labels
 
@@ -358,7 +394,27 @@ sum by (version, scenario) (mortgage_applications_compensated_total)
 
 Shows compensation grouped by worker version and scenario.
 
-#### Suggested metrics demo flow
+#### Suggested Grafana demo flow
+
+1. Open Grafana at <http://localhost:3000>.
+2. Open the **Mortgage Application Demo** dashboard from the
+   `Mortgage Demo` folder.
+3. Confirm the worker scrape health panel shows the v1 worker as `Up`.
+   The v2 worker reads `Down` until `make deploy-v2` is run, which is
+   expected.
+4. Start and complete a v1 application from the UI. The started and
+   completed panels increment.
+5. Run `make deploy-v2` and `make set-worker-version` to promote v2,
+   then complete a v2 application.
+6. Show the version split on the dashboard: the started, completed and
+   rate panels now break out v1 and v2 separately.
+7. Trigger a compensation scenario and observe the
+   `Compensated applications` panel and the compensation table populate.
+8. Open the `Temporal` folder and the `Temporal SDK (Go/Java, Tally)`
+   dashboard to show standard worker and runtime metrics on the same
+   data source.
+
+#### Suggested Prometheus demo flow
 
 1. Open Prometheus at <http://localhost:9090/graph>.
 2. Run `up{job="mortgage-worker"}` to confirm scraping.

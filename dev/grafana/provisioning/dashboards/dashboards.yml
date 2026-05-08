@@ -1,0 +1,26 @@
+apiVersion: 1
+
+providers:
+  - name: Mortgage Demo
+    orgId: 1
+    folder: Mortgage Demo
+    type: file
+    disableDeletion: true
+    editable: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards/mortgage
+      foldersFromFilesStructure: false
+
+  - name: Temporal
+    orgId: 1
+    folder: Temporal
+    type: file
+    disableDeletion: true
+    editable: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards/temporal
+      foldersFromFilesStructure: false

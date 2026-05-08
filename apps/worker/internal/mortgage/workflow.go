@@ -610,6 +610,7 @@ func runSendNotification(ctx workflow.Context, app *MortgageApplication, acts *a
 		ApplicationID:              app.ApplicationID,
 		Status:                     string(status),
 		Scenario:                   string(scenario),
+		SubmittedAt:                app.CreatedAt,
 		ExternalFailureRatePercent: failureRate,
 	}).Get(ctx, &result); err != nil {
 		workflow.GetLogger(ctx).Warn("notification dispatch failed; continuing without propagating",

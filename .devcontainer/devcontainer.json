@@ -26,9 +26,11 @@
     "GIT_REPO": "github.com/temporal-sa/mortgage-application-demo"
   },
   "forwardPorts": [
+    3000,
     8080,
     8233,
     9000,
+    9090,
     9999
   ]
 }

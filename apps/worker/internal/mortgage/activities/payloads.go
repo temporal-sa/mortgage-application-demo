@@ -108,8 +108,13 @@ type SendNotificationInput struct {
 	Status        string `json:"status"`
 	// Scenario labels the "applications completed" metric so demo runs can
 	// be split by scenario in Prometheus. Empty when not supplied.
-	Scenario                   string `json:"scenario,omitempty"`
-	ExternalFailureRatePercent int    `json:"externalFailureRatePercent,omitempty"`
+	Scenario string `json:"scenario,omitempty"`
+	// SubmittedAt is the workflow-recorded application start time (intake).
+	// The activity uses it once, alongside the completion counter, to
+	// observe end-to-end application duration. Optional: when zero, the
+	// duration histogram is not emitted for that execution.
+	SubmittedAt                time.Time `json:"submittedAt,omitempty"`
+	ExternalFailureRatePercent int       `json:"externalFailureRatePercent,omitempty"`
 }
 
 type SendNotificationResult struct {

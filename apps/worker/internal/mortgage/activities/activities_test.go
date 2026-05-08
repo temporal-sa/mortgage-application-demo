@@ -4,10 +4,15 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+	dto "github.com/prometheus/client_model/go"
 	"github.com/stretchr/testify/assert"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/testsuite"
+
+	"github.com/temporal-sa/mortgage-application-demo/apps/worker/internal/observability"
 )
 
 func init() {
@@ -479,6 +484,77 @@ func TestSendNotification(t *testing.T) {
 				"external failure injection must produce a retryable error")
 		}
 	})
+
+	// Duration histogram is observed once per terminal completion alongside
+	// the completion counter. The activity body is the right place: it runs
+	// outside workflow replay and only on the successful attempt of
+	// SendNotification, so each execution contributes a single sample.
+	t.Run("observes application duration when SubmittedAt is set", func(t *testing.T) {
+		env := newTestEnvWithProfile(t, "v1")
+
+		labels := []string{"happy_path", "v1", "approved"}
+		before := histogramSampleCount(t, labels)
+
+		_, err := env.ExecuteActivity(testActs.SendNotification, SendNotificationInput{
+			ApplicationID: "APP-001",
+			Status:        "approved",
+			Scenario:      "happy_path",
+			SubmittedAt:   time.Now().Add(-2 * time.Second),
+		})
+		assert.NoError(t, err)
+
+		after := histogramSampleCount(t, labels)
+		assert.Equal(t, before+1, after,
+			"duration histogram must observe exactly one sample on success")
+	})
+
+	// Duration histogram is skipped when the workflow did not supply a start
+	// time. Tests and any legacy caller that omits SubmittedAt must not
+	// contribute zero or near-zero samples that would skew the percentile.
+	t.Run("skips application duration when SubmittedAt is zero", func(t *testing.T) {
+		env := newTestEnvWithProfile(t, "v1")
+
+		labels := []string{"happy_path", "v1", "rejected"}
+		before := histogramSampleCount(t, labels)
+
+		_, err := env.ExecuteActivity(testActs.SendNotification, SendNotificationInput{
+			ApplicationID: "APP-002",
+			Status:        "rejected",
+			Scenario:      "happy_path",
+		})
+		assert.NoError(t, err)
+
+		after := histogramSampleCount(t, labels)
+		assert.Equal(t, before, after,
+			"duration histogram must not record a sample when SubmittedAt is zero")
+	})
+}
+
+// histogramSampleCount reads the current sample count from
+// ApplicationDurationSeconds for the supplied label values, going through the
+// official Prometheus client interface so the test stays decoupled from
+// internal storage.
+func histogramSampleCount(t *testing.T, labels []string) uint64 {
+	t.Helper()
+	obs, err := observability.ApplicationDurationSeconds.GetMetricWithLabelValues(labels...)
+	if err != nil {
+		t.Fatalf("get histogram: %v", err)
+	}
+	// GetMetricWithLabelValues returns a prometheus.Observer; the concrete
+	// histogram value also implements prometheus.Metric, which is what
+	// Write expects.
+	pm, ok := obs.(prometheus.Metric)
+	if !ok {
+		t.Fatalf("histogram observer does not implement prometheus.Metric")
+	}
+	var m dto.Metric
+	if err := pm.Write(&m); err != nil {
+		t.Fatalf("write histogram: %v", err)
+	}
+	if m.Histogram == nil {
+		return 0
+	}
+	return m.Histogram.GetSampleCount()
 }
 
 func TestReleaseOffer(t *testing.T) {
