@@ -6,6 +6,7 @@
   import ActionsPanel from '$lib/components/ActionsPanel.svelte';
   import ApplicationSummary from '$lib/components/ApplicationSummary.svelte';
   import AuditTimeline from '$lib/components/AuditTimeline.svelte';
+  import { applicationExecutionKey } from '$lib/types';
   import type {
     ApplicationListItem,
     ApplicationWorkflowStatus,
@@ -164,7 +165,7 @@
     refreshing = true;
     refreshError = '';
     try {
-      app = await api.getApplication(app.applicationId);
+      app = await api.getApplication(app.applicationId, app.runId);
     } catch (e) {
       refreshError = e instanceof Error ? e.message : 'Refresh failed';
     } finally {
@@ -173,14 +174,19 @@
     await refreshApplications();
   }
 
-  async function loadApplication(id: string) {
+  async function loadApplication(id: string, runId?: string) {
     loadLoading = true;
     loadError = '';
     try {
-      app = await api.getApplication(id);
+      app = await api.getApplication(id, runId);
 
       const url = new URL(resolve('/'), page.url.origin);
       url.searchParams.set('applicationId', id);
+      if (runId) {
+        url.searchParams.set('runId', runId);
+      } else {
+        url.searchParams.delete('runId');
+      }
 
       // eslint-disable-next-line svelte/no-navigation-without-resolve
       await goto(url, {
@@ -337,13 +343,15 @@
       <p class="muted">No applications found.</p>
     {:else}
       <ul class="app-list">
-        {#each applications as item (item.applicationId)}
+        {#each applications as item (applicationExecutionKey(item))}
           <li>
             <button
               type="button"
               class="app-item"
-              class:app-item--active={app?.applicationId === item.applicationId}
-              onclick={() => void loadApplication(item.applicationId)}
+              class:app-item--active={app?.applicationId ===
+                item.applicationId && app?.runId === item.runId}
+              onclick={() =>
+                void loadApplication(item.applicationId, item.runId)}
               disabled={loadLoading}
             >
               <div class="app-item-info">

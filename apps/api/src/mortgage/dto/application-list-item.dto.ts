@@ -9,6 +9,12 @@ export class ApplicationListItemDto {
   @ApiProperty({ description: 'Unique identifier for the application' })
   applicationId: string;
 
+  @ApiPropertyOptional({
+    description:
+      'Temporal workflow run ID for this execution. Combined with applicationId it uniquely identifies a single workflow execution, which matters when the same applicationId has been re-run.',
+  })
+  runId?: string;
+
   @ApiProperty({ description: 'Full name of the applicant' })
   applicantName: string;
 

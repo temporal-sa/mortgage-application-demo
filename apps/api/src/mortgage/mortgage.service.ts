@@ -66,9 +66,17 @@ export class MortgageService {
     });
   }
 
-  async getApplication(applicationId: string): Promise<MortgageApplication> {
+  async getApplication(
+    applicationId: string,
+    runId?: string,
+  ): Promise<MortgageApplication> {
+    // When runId is supplied the caller wants a specific execution. This
+    // matters when the same applicationId has been reset/re-run from the
+    // Temporal UI, so multiple executions share the workflowId and the
+    // default getHandle would always return the latest.
     const handle = this.client.workflow.getHandle(
       this.workflowId(applicationId),
+      runId,
     );
     try {
       // Run describe and query in parallel. workflowStatus lets the UI
@@ -91,6 +99,7 @@ export class MortgageService {
         workflowStatus: normaliseWorkflowStatus(desc.status.code),
         workflowVersion: deriveWorkflowVersion(workerBuildId),
         ...(workerBuildId !== undefined && { workerBuildId }),
+        ...(desc.runId !== undefined && { runId: desc.runId }),
       };
     } catch (err) {
       if (err instanceof WorkflowNotFoundError) {
@@ -360,6 +369,7 @@ export class MortgageService {
     // if it does, the list still renders with workflowVersion=unknown
     // rather than failing the whole request.
     const workerBuildId = await this.resolveWorkerBuildId(info, handle);
+    const runId = info.runId;
 
     if (memo.applicantName !== undefined) {
       return this.toApplicationListItem(
@@ -367,6 +377,7 @@ export class MortgageService {
         workflowStatus,
         memo,
         workerBuildId,
+        runId,
       );
     }
 
@@ -383,6 +394,7 @@ export class MortgageService {
           applicantName: app.applicantName,
         },
         workerBuildId,
+        runId,
       );
     }
 
@@ -396,6 +408,7 @@ export class MortgageService {
           applicantName: app.applicantName,
         },
         workerBuildId,
+        runId,
       );
     }
 
@@ -404,6 +417,7 @@ export class MortgageService {
       workflowStatus,
       {},
       workerBuildId,
+      runId,
     );
   }
 
@@ -461,6 +475,7 @@ export class MortgageService {
     workflowStatus: ApplicationWorkflowStatus,
     data: { applicationId?: string; applicantName?: string; scenario?: string },
     workerBuildId?: string,
+    runId?: string,
   ): ApplicationListItemDto {
     return {
       applicationId:
@@ -470,6 +485,7 @@ export class MortgageService {
       workflowStatus,
       workflowVersion: deriveWorkflowVersion(workerBuildId),
       ...(workerBuildId !== undefined && { workerBuildId }),
+      ...(runId !== undefined && { runId }),
     };
   }
 }

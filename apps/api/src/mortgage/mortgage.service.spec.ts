@@ -164,6 +164,7 @@ describe('MortgageService', () => {
 
       expect(mockWorkflowClient.workflow.getHandle).toHaveBeenCalledWith(
         'mortgage-application-app-123',
+        undefined,
       );
       expect(mockHandle.query).toHaveBeenCalledWith('getApplication');
       // The API normalises Temporal's proto enum value to the canonical
@@ -384,6 +385,37 @@ describe('MortgageService', () => {
       expect(result.workflowVersion).toBe('unknown');
       expect(result.workerBuildId).toBeUndefined();
     });
+
+    it('exposes runId from the workflow execution description', async () => {
+      mockHandle.query.mockResolvedValue({
+        applicationId: 'app-123',
+        status: 'submitted',
+      });
+      mockHandle.describe.mockResolvedValue({
+        status: {
+          code: WorkflowExecutionStatus.WORKFLOW_EXECUTION_STATUS_RUNNING,
+        },
+        runId: 'run-xyz',
+      });
+
+      const result = await service.getApplication('app-123');
+
+      expect(result.runId).toBe('run-xyz');
+    });
+
+    it('passes runId through to getHandle when supplied', async () => {
+      mockHandle.query.mockResolvedValue({
+        applicationId: 'app-123',
+        status: 'submitted',
+      });
+
+      await service.getApplication('app-123', 'run-aaa');
+
+      expect(mockWorkflowClient.workflow.getHandle).toHaveBeenCalledWith(
+        'mortgage-application-app-123',
+        'run-aaa',
+      );
+    });
   });
 
   describe('listApplications', () => {
@@ -393,6 +425,7 @@ describe('MortgageService', () => {
         statusCode: number;
         memo?: Record<string, unknown>;
         raw?: Record<string, unknown>;
+        runId?: string;
       }>,
     ) {
       return {
@@ -404,6 +437,7 @@ describe('MortgageService', () => {
           for (const item of items) {
             yield {
               workflowId: item.workflowId,
+              runId: item.runId,
               status: { code: item.statusCode },
               memo: item.memo,
               raw: item.raw ?? {},
@@ -419,6 +453,7 @@ describe('MortgageService', () => {
         statusCode: number;
         memo?: Record<string, unknown>;
         raw?: Record<string, unknown>;
+        runId?: string;
       }>,
     ) {
       const yielder = makeListYielder(items);
@@ -563,6 +598,48 @@ describe('MortgageService', () => {
       expect(listItem.workerBuildId).toBe(detail.workerBuildId);
       expect(listItem.workflowVersion).toBe('v1');
       expect(listItem.workerBuildId).toBe('mortgage-worker-v1');
+    });
+
+    // The same applicationId can legitimately appear across multiple
+    // workflow executions (e.g. after a reset/re-run from the Temporal UI).
+    // Each list item must carry its own runId so the UI can key by
+    // (applicationId, runId) rather than by applicationId alone.
+    it('includes runId on each list item and returns duplicates with the same applicationId distinctly', async () => {
+      withListIterator([
+        {
+          workflowId: 'mortgage-application-app-123',
+          runId: 'run-aaa',
+          statusCode: WorkflowExecutionStatus.WORKFLOW_EXECUTION_STATUS_RUNNING,
+          memo: { applicantName: 'Alice', applicationId: 'app-123' },
+          raw: {},
+        },
+        {
+          workflowId: 'mortgage-application-app-123',
+          runId: 'run-bbb',
+          statusCode:
+            WorkflowExecutionStatus.WORKFLOW_EXECUTION_STATUS_COMPLETED,
+          memo: { applicantName: 'Alice', applicationId: 'app-123' },
+          raw: {},
+        },
+      ]);
+
+      const result = await service.listApplications();
+
+      expect(result).toHaveLength(2);
+      expect(result[0]).toEqual(
+        expect.objectContaining({
+          applicationId: 'app-123',
+          runId: 'run-aaa',
+          workflowStatus: 'running',
+        }),
+      );
+      expect(result[1]).toEqual(
+        expect.objectContaining({
+          applicationId: 'app-123',
+          runId: 'run-bbb',
+          workflowStatus: 'completed',
+        }),
+      );
     });
 
     // describe() can fail (e.g. workflow deleted between list and
