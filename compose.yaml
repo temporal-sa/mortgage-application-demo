@@ -66,6 +66,7 @@ services:
       API_URL: http://api:9000
       LOG_LEVEL: ${LOG_LEVEL:-info}
       PORT: 9999
+      PUBLIC_BANK_NAME: Temporal Bank
     ports:
       - 9999:9999
     volumes:
