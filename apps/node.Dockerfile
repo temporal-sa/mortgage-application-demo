@@ -18,7 +18,7 @@ FROM docker.io/library/node:lts-alpine AS builder
 ARG APP
 USER node
 WORKDIR /home/node/root
-COPY --from=dev /home/node/root .
+COPY --from=dev --chown=node:node /home/node/root .
 WORKDIR /home/node/root/apps/$APP
 RUN npm ci \
   && npm run build

@@ -33,36 +33,18 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: dorny/paths-filter@v4
-        id: filtered
-        if: ${{ !startsWith(github.event.ref, 'refs/tags/') }}
-        with:
-          list-files: json
-          filters: |
-            apps:
-              - apps/**/*
-            all:
-              - apps/**/*
-              - packages/**/*
-
       - name: List components
         id: list
         run: |
           touch /tmp/all.yaml
           touch /tmp/apps.yaml
 
-          if [ "${{ startsWith(github.event.ref, 'refs/tags/') }}" = "true"  ];
-          then
-            # Tag build - use everything
-            apps="$(find apps/ -maxdepth 1 -mindepth 1 -type d | jq -Rsc 'split("\n")[:-1]')"
-            pkgs="$(find packages/ -maxdepth 1 -mindepth 1 -type d | jq -Rsc 'split("\n")[:-1]')"
+          # Always build every app, regardless of which files changed.
+          # `all` covers apps + packages so the test matrix exercises both.
+          apps="$(find apps/ -maxdepth 1 -mindepth 1 -type d | jq -Rsc 'split("\n")[:-1]')"
+          pkgs="$(find packages/ -maxdepth 1 -mindepth 1 -type d | jq -Rsc 'split("\n")[:-1]')"
 
-            all="$(jq -rc --argjson apps "$apps" --argjson pkgs "$pkgs" -n '$apps + $pkgs')"
-          else
-            # Branch build - use filtered
-            all='${{ steps.filtered.outputs.all_files }}'
-            apps='${{ steps.filtered.outputs.apps_files }}'
-          fi
+          all="$(jq -rc --argjson apps "$apps" --argjson pkgs "$pkgs" -n '$apps + $pkgs')"
 
           for row in $(echo $all | jq -r '.[] | @base64'); do
             d=$(echo $row | base64 -d)
@@ -86,10 +68,10 @@ jobs:
           echo "all={\"component\":$(cat /tmp/all.yaml | yq -o json -I 0)}" >> "$GITHUB_OUTPUT"
           echo "apps={\"component\":$(cat /tmp/apps.yaml | yq -o json -I 0)}" >> "$GITHUB_OUTPUT"
 
-          echo "All changed directories:"
+          echo "All components:"
           cat /tmp/all.yaml
 
-          echo "App changes:"
+          echo "Apps:"
           cat /tmp/apps.yaml
 
       - name: "Go: Set up"
