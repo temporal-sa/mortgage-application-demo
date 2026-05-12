@@ -2,7 +2,9 @@
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
+  import { env } from '$env/dynamic/public';
   import * as api from '$lib/api';
+  import bankLogo from '$lib/assets/logo.svg';
   import ActionsPanel from '$lib/components/ActionsPanel.svelte';
   import ApplicationSummary from '$lib/components/ApplicationSummary.svelte';
   import AuditTimeline from '$lib/components/AuditTimeline.svelte';
@@ -24,8 +26,7 @@
 
   let { data }: { data: PageData } = $props();
 
-  const bankLogo = '/logo.png';
-  const bankName = 'Temporal Bank';
+  const bankName = env.PUBLIC_BANK_NAME ?? 'Temporal Bank';
   const refreshTimeout = 3000;
 
   // ── Scenarios ───────────────────────────────────────────────────────────
