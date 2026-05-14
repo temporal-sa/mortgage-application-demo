@@ -25,7 +25,7 @@
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.0.1",
-    "@nestjs/platform-fastify": "^11.1.19",
+    "@nestjs/platform-fastify": "^11.1.21",
     "@nestjs/swagger": "^11.4.2",
     "@nestjs/terminus": "^11.1.1",
     "@temporalio/client": "^1.16.1",
