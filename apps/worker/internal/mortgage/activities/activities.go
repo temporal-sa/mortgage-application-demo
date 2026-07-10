@@ -99,7 +99,8 @@ func (a *Activities) RequestCreditCheck(ctx context.Context, input CreditCheckIn
 
 	reference := "CREDIT-REQ-" + input.ApplicationID
 
-	logger.Info("credit check requested; awaiting external result via signal",
+	logger.Info(
+		"credit check requested; awaiting external result via signal",
 		"applicationId", input.ApplicationID,
 		"reference", reference,
 	)
@@ -142,7 +143,8 @@ func (a *Activities) PropertyValuation(ctx context.Context, input PropertyValuat
 
 	valuationID := "VAL-" + input.ApplicationID
 
-	logger.Info("property valuation completed",
+	logger.Info(
+		"property valuation completed",
 		"applicationId", input.ApplicationID,
 		"valuationId", valuationID,
 		"propertyValue", input.PropertyValue,
@@ -174,7 +176,8 @@ func (a *Activities) ReserveOffer(ctx context.Context, input ReserveOfferInput) 
 
 	offerID := "OFFER-" + input.ApplicationID
 
-	logger.Info("offer reserved",
+	logger.Info(
+		"offer reserved",
 		"applicationId", input.ApplicationID,
 		"offerId", offerID,
 	)
@@ -199,7 +202,8 @@ func (a *Activities) ReleaseOffer(ctx context.Context, input ReleaseOfferInput) 
 		return ReleaseOfferResult{}, err
 	}
 
-	logger.Info("offer released",
+	logger.Info(
+		"offer released",
 		"applicationId", input.ApplicationID,
 		"offerId", input.OfferID,
 	)
@@ -253,7 +257,8 @@ func (a *Activities) SendNotification(ctx context.Context, input SendNotificatio
 		)
 	}
 
-	logger.Info("notification dispatched to applicant",
+	logger.Info(
+		"notification dispatched to applicant",
 		"applicationId", input.ApplicationID,
 		"status", input.Status,
 	)
@@ -308,7 +313,8 @@ func (a *Activities) CompleteApplication(ctx context.Context, input CompleteAppl
 	}
 
 	if input.SimulateFailure && info.Attempt <= 4 {
-		logger.Warn("simulating completion failure for demo; Temporal will retry",
+		logger.Warn(
+			"simulating completion failure for demo; Temporal will retry",
 			"applicationId", input.ApplicationID,
 			"offerId", input.OfferID,
 			"attempt", info.Attempt,
@@ -320,7 +326,8 @@ func (a *Activities) CompleteApplication(ctx context.Context, input CompleteAppl
 		)
 	}
 
-	logger.Info("mortgage application completed",
+	logger.Info(
+		"mortgage application completed",
 		"applicationId", input.ApplicationID,
 		"offerId", input.OfferID,
 		"attempt", info.Attempt,

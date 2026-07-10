@@ -486,7 +486,8 @@ func waitForPropertyValuation(ctx workflow.Context, app *MortgageApplication) fl
 		// Ignore non-positive submissions: keep waiting for a valid value
 		// rather than corrupting downstream state. The API rejects this case
 		// up front, but the workflow remains defensive.
-		workflow.GetLogger(ctx).Warn("ignoring non-positive property valuation; awaiting a valid value",
+		workflow.GetLogger(ctx).Warn(
+			"ignoring non-positive property valuation; awaiting a valid value",
 			"applicationId", app.ApplicationID,
 			"propertyValue", submitted.PropertyValue,
 		)
