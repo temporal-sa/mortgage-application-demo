@@ -77,3 +77,5 @@ set-worker-version:
 		-e DEPLOYMENT_VERSION=$(DEPLOYMENT_VERSION) \
 		worker-version
 .PHONY: set-worker-version
+
+v2-deploy-and-activate: deploy-v2 set-worker-version
