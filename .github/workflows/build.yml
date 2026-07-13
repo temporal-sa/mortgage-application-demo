@@ -19,7 +19,7 @@ jobs:
     env:
       GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # fetch-depth is required
 
@@ -31,7 +31,7 @@ jobs:
       all: '${{ steps.list.outputs.all }}'
       apps: '${{ steps.list.outputs.apps }}'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: List components
         id: list
@@ -114,7 +114,7 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # fetch-depth is required
 
@@ -151,7 +151,7 @@ jobs:
       run:
         working-directory: './${{ matrix.component }}'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: actions/download-artifact@v8
         with:
@@ -217,7 +217,7 @@ jobs:
       fail-fast: true
       matrix: '${{ fromJson(needs.list_components.outputs.apps) }}'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: actions/download-artifact@v8
         with:
