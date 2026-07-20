@@ -19,7 +19,7 @@ jobs:
     env:
       GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # fetch-depth is required
 
@@ -31,7 +31,7 @@ jobs:
       all: '${{ steps.list.outputs.all }}'
       apps: '${{ steps.list.outputs.apps }}'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: List components
         id: list
@@ -75,12 +75,12 @@ jobs:
           cat /tmp/apps.yaml
 
       - name: "Go: Set up"
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
 
       - name: "JS: Setup"
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: lts/*
 
@@ -114,12 +114,12 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # fetch-depth is required
 
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
 
@@ -128,7 +128,7 @@ jobs:
           python-version: 3.x
 
       - name: Set up JS
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: lts/*
 
@@ -151,7 +151,7 @@ jobs:
       run:
         working-directory: './${{ matrix.component }}'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: actions/download-artifact@v8
         with:
@@ -175,7 +175,7 @@ jobs:
       # Golang checks
       - name: "Go: Set up"
         if: steps.lang.outputs.lang == 'go'
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
 
@@ -194,7 +194,7 @@ jobs:
       # JS checks
       - name: "JS: Setup"
         if: steps.lang.outputs.lang == 'js'
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: lts/*
 
@@ -217,7 +217,7 @@ jobs:
       fail-fast: true
       matrix: '${{ fromJson(needs.list_components.outputs.apps) }}'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: actions/download-artifact@v8
         with:
