@@ -20,13 +20,13 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "@fastify/static": "^9.1.3",
+    "@fastify/static": "^10.1.6",
     "@mrsimonemms/temporal-codec-server": "^0.5.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.0.1",
-    "@nestjs/platform-fastify": "^11.1.19",
-    "@nestjs/swagger": "^11.4.2",
+    "@nestjs/platform-fastify": "^11.2.7",
+    "@nestjs/swagger": "^11.4.7",
     "@nestjs/terminus": "^11.1.1",
     "@temporalio/client": "^1.16.1",
     "@temporalio/common": "^1.16.1",
